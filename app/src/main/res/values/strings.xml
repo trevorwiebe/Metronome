@@ -2,5 +2,11 @@
     <string name="app_name">Metronome</string>
 
     Main Activity
+    <string name="bp_minute">Beats Per Minute</string>
+    <string name="bp_measure">Beats Per Measure</string>
     <string name="tap_to_rhythm_btn">Tap to the Rhythm to set BPM</string>
+    <string name="btn_plus">+</string>
+    <string name="btn_minus">-</string>
+    <string name="go_btn">Start</string>
+    <string name="stop_btn">Stop</string>
 </resources>

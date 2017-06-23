@@ -5,44 +5,216 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true"
+    android:background="@android:color/white"
     tools:context="com.stickyblob.metronome.MainActivity">
 
+    <TextView
+        android:id="@+id/beats_per_minute_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="24dp"
+        android:paddingBottom="24dp"
+        android:text="@string/bp_minute"
+        android:textColor="@android:color/black"
+        android:textSize="20sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ImageView
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@android:color/darker_gray"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/beats_per_minute_btn"/>
+
     <Button
-        android:id="@+id/button"
+        android:id="@+id/tap_to_rhythm_btn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@color/colorPrimary"
+        android:onClick="tapToRhythm"
         android:padding="@dimen/button_padding"
         android:text="@string/tap_to_rhythm_btn"
-        android:background="@color/colorPrimary"
         android:textColor="@android:color/white"
-        android:onClick="tapToRhythm"
-        android:layout_marginRight="8dp"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginLeft="8dp"
-        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="8dp"/>
-
-    <TextView
-        android:id="@+id/timeTv"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginTop="24dp"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <Button
+        android:id="@+id/plus_bp_minute_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:onClick="plusBPMinuteBtnClicked"
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        android:minHeight="40dp"
+        android:minWidth="40dp"
+        android:text="@string/btn_plus"
+        android:textColor="@android:color/black"
+        app:layout_constraintBaseline_toBaselineOf="@+id/bp_minute_et"
+        app:layout_constraintRight_toLeftOf="@+id/bp_minute_et"/>
+
+    <Button
+        android:id="@+id/minus_bp_minutes_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:onClick="minusBPMinuteBtnClicked"
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        android:minHeight="40dp"
+        android:minWidth="40dp"
+        android:text="@string/btn_minus"
+        android:textColor="@android:color/black"
+        app:layout_constraintBottom_toTopOf="@+id/divider"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <TextView
-        android:id="@+id/averageTimeTv"
+    <EditText
+        android:id="@+id/bp_minute_et"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:ems="3"
+        android:inputType="number"
+        android:text="0"
+        android:gravity="center"
+        app:layout_constraintBaseline_toBaselineOf="@+id/minus_bp_minutes_btn"
+        app:layout_constraintRight_toLeftOf="@+id/minus_bp_minutes_btn"
+        android:layout_marginRight="16dp"/>
+
+    <TextView
+        android:id="@+id/beats_per_measure_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="24dp"
+        android:paddingBottom="24dp"
+        android:text="@string/bp_measure"
+        android:textColor="@android:color/black"
+        android:textSize="20sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider"/>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="32dp"
+        android:background="@android:color/darker_gray"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/timeTv"/>
+        app:layout_constraintTop_toBottomOf="@+id/beats_per_measure_btn"/>
+
+    <Button
+        android:id="@+id/minus_bp_measure_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:onClick="minusBPMeasureBtnClicked"
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        android:minHeight="40dp"
+        android:minWidth="40dp"
+        android:text="@string/btn_minus"
+        android:textColor="@android:color/black"
+        app:layout_constraintBottom_toTopOf="@+id/imageView"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider"/>
+
+    <EditText
+        android:id="@+id/bp_measure_et"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="3"
+        android:inputType="number"
+        android:text="0"
+        android:gravity="center"
+        app:layout_constraintBaseline_toBaselineOf="@+id/minus_bp_measure_btn"
+        app:layout_constraintRight_toLeftOf="@+id/minus_bp_measure_btn"
+        android:layout_marginRight="16dp"/>
+
+    <Button
+        android:id="@+id/plus_bp_measure_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:onClick="plusBPMeasureBtnClicked"
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        android:minHeight="40dp"
+        android:minWidth="40dp"
+        android:text="@string/btn_plus"
+        android:textColor="@android:color/black"
+        app:layout_constraintBaseline_toBaselineOf="@+id/bp_measure_et"
+        app:layout_constraintRight_toLeftOf="@+id/bp_measure_et"/>
+
+    <Button
+        android:id="@+id/go_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:onClick="startBtnClicked"
+        android:text="@string/go_btn"
+        app:layout_constraintBaseline_toBaselineOf="@+id/stop_btn"
+        app:layout_constraintRight_toLeftOf="@+id/stop_btn"/>
+
+    <Button
+        android:id="@+id/stop_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="0dp"
+        android:text="@string/stop_btn"
+        android:onClick="stopBtnClicked"
+        app:layout_constraintBottom_toTopOf="@+id/tap_to_rhythm_btn"
+        app:layout_constraintHorizontal_bias="0.68"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView"
+        app:layout_constraintVertical_bias="0.502"/>
 
 </android.support.constraint.ConstraintLayout>
