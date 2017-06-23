@@ -5,4 +5,5 @@
     <color name="colorAccent">#FF4081</color>
 
     <color name="plusMinusBtnPressed">#eeeeee</color>
+    <color name="tTRBtnPressed">#303f9f</color>
 </resources>
