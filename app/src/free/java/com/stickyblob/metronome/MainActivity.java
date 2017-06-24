@@ -112,13 +112,12 @@ public class MainActivity extends AppCompatActivity {
         mRunnable = new Runnable() {
             @Override
             public void run() {
-//                String tick = Environment.getExternalStorageDirectory().getPath() + "/Metronome-6-22-2017/tickmp3";
-//                try {
-//                    mMediaPlayer = MediaPlayer.create(this, Uri.parse(tick));
-//                }catch (Exception e){
-//                    Log.e(TAG, "run: ", e);
-//                }
                 beatInMeasure++;
+                if(beatInMeasure == 1){
+                    playAccent(R.raw.bubble_accent);
+                }else{
+                    playNonAccent(R.raw.bubble);
+                }
                 mBeatsInMeasure.setText(Integer.toString(beatInMeasure));
                 long milli_delay = Long.parseLong(mBPMinuteEditText.getText().toString());
                 double some_num = 60.000 / milli_delay;
@@ -158,10 +157,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
     }
@@ -289,6 +287,24 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (Exception e2) {
             Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void playAccent(int file){
+        try {
+            mMediaPlayer = MediaPlayer.create(getApplicationContext(), file);
+            mMediaPlayer.start();
+        }catch (Exception e){
+            Log.e(TAG, "run: ", e);
+        }
+    }
+
+    private void playNonAccent(int file){
+        try {
+            mMediaPlayer = MediaPlayer.create(getApplicationContext(), file);
+            mMediaPlayer.start();
+        }catch (Exception e){
+            Log.e(TAG, "run: ", e);
         }
     }
 }

@@ -8,7 +8,6 @@ import android.hardware.camera2.CameraManager;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
@@ -46,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private long delay = 0;
     private int beatInMeasure = 0;
     private long notification_time;
+    private boolean shouldTurnFlashlightOff = true;
 
 
     private EditText mBPMinuteEditText;
@@ -66,11 +66,6 @@ public class MainActivity extends AppCompatActivity {
         mBPMeasureEditText = (EditText) findViewById(R.id.bp_measure_et);
         mBeatsInMeasure = (TextView) findViewById(R.id.beat_in_measure_tv);
         mTapToRhythmBtn = (Button) findViewById(R.id.tap_to_rhythm_btn);
-
-        String tick = Environment.getExternalStorageDirectory() + "/Metronome-6-22-2017/tickmp3";
-
-        Log.d(TAG, "onCreate: " + tick);
-
 
         mBeatsInMeasure.setText("0");
 
@@ -110,13 +105,12 @@ public class MainActivity extends AppCompatActivity {
         mRunnable = new Runnable() {
             @Override
             public void run() {
-//                String tick = Environment.getExternalStorageDirectory().getPath() + "/Metronome-6-22-2017/tickmp3";
-//                try {
-//                    mMediaPlayer = MediaPlayer.create(this, Uri.parse(tick));
-//                }catch (Exception e){
-//                    Log.e(TAG, "run: ", e);
-//                }
                 beatInMeasure++;
+                if(beatInMeasure == 1){
+                    playAccent(R.raw.bubble_accent);
+                }else{
+                    playNonAccent(R.raw.bubble);
+                }
                 mBeatsInMeasure.setText(Integer.toString(beatInMeasure));
                 long milli_delay = Long.parseLong(mBPMinuteEditText.getText().toString());
                 double some_num = 60.000 / milli_delay;
@@ -133,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
                 mFlashLightHandler.removeCallbacksAndMessages(null);
                 toggle = true;
                 mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
-                Log.d(TAG, "run: notifc time = " + notification_time);
                 mHandler.postDelayed(this, delay);
             }
         };
@@ -167,10 +160,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
+        if(mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
     }
 
     @Override
@@ -253,6 +250,10 @@ public class MainActivity extends AppCompatActivity {
     public void stopBtnClicked(View view) {
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
+        if(mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
     }
     // end of button callbacks
 
@@ -292,6 +293,7 @@ public class MainActivity extends AppCompatActivity {
                 if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
 
                     cameraManager.setTorchMode(id, true);
+                    shouldTurnFlashlightOff = true;
                 }
             }
 
@@ -302,20 +304,41 @@ public class MainActivity extends AppCompatActivity {
 
     @TargetApi(Build.VERSION_CODES.M)
     private void turnFlashlightOff(){
-        try {
-            CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
+        if(shouldTurnFlashlightOff) {
+            try {
+                CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
 
-            for (String id : cameraManager.getCameraIdList()) {
+                for (String id : cameraManager.getCameraIdList()) {
 
-                // Turn on the flash if camera has one
-                if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
+                    // Turn on the flash if camera has one
+                    if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
 
-                    cameraManager.setTorchMode(id, false);
+                        cameraManager.setTorchMode(id, false);
+                    }
                 }
-            }
 
-        } catch (Exception e2) {
-            Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
+            } catch (Exception e2) {
+                Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+            shouldTurnFlashlightOff = false;
+        }
+    }
+
+    private void playAccent(int file){
+        try {
+            mMediaPlayer = MediaPlayer.create(getApplicationContext(), file);
+            mMediaPlayer.start();
+        }catch (Exception e){
+            Log.e(TAG, "run: ", e);
+        }
+    }
+
+    private void playNonAccent(int file){
+        try {
+            mMediaPlayer = MediaPlayer.create(getApplicationContext(), file);
+            mMediaPlayer.start();
+        }catch (Exception e){
+            Log.e(TAG, "run: ", e);
         }
     }
 }
