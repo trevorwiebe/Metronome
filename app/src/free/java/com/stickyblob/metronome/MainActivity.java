@@ -29,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
 
     Handler mHandler = new Handler();
     Runnable mRunnable;
+    Handler mFlashLightHandler = new Handler();
+    Runnable mFlashLightRunnable;
     MediaPlayer mMediaPlayer;
 
     private boolean toggle = false;
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private double bpm;
     private long delay = 0;
     private int beatInMeasure = 0;
+    private long notification_time;
 
 
     private EditText mBPMinuteEditText;
@@ -93,6 +96,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mFlashLightRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if(toggle){
+                    turnFlashlightOn();
+                    toggle = false;
+                }else{
+                    turnFlashlightOff();
+                }
+                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+            }
+        };
+
         mRunnable = new Runnable() {
             @Override
             public void run() {
@@ -108,10 +124,13 @@ public class MainActivity extends AppCompatActivity {
                 double some_num = 60.000 / milli_delay;
                 double millis = some_num * 1000;
                 delay = (int) Math.round(millis);
-                long notification_time = delay / 10;
+                notification_time = delay / 10;
                 if(notification_time > 100){
                     notification_time = 100;
                 }
+                toggle = true;
+                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                Log.d(TAG, "run: notifc time = " + notification_time);
                 if(beatInMeasure >= Integer.parseInt(mBPMeasureEditText.getText().toString())){
                     beatInMeasure = 0;
                 }
@@ -144,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         mHandler.removeCallbacksAndMessages(null);
+        mFlashLightHandler.removeCallbacksAndMessages(null);
     }
 
     // Button Callbacks
@@ -204,28 +224,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void stopBtnClicked(View view) {
         mHandler.removeCallbacksAndMessages(null);
+        mFlashLightHandler.removeCallbacksAndMessages(null);
     }
     // end of button callbacks
 
 
-    @TargetApi(Build.VERSION_CODES.M)
-    private void toggleFlashLight(int timeOn) {
-        toggle = !toggle;
-        try {
-            CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
-
-            for (String id : cameraManager.getCameraIdList()) {
-
-                // Turn on the flash if camera has one
-                if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
-                    cameraManager.setTorchMode(id, toggle);
-                }
-            }
-
-        } catch (Exception e2) {
-            Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
 
     private long testTime() {
         // get current time in millis
@@ -249,5 +252,43 @@ public class MainActivity extends AppCompatActivity {
         timeOld = 0;
 
         shouldSet = false;
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private void turnFlashlightOn(){
+        try {
+            CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
+
+            for (String id : cameraManager.getCameraIdList()) {
+
+                // Turn on the flash if camera has one
+                if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
+
+                    cameraManager.setTorchMode(id, true);
+                }
+            }
+
+        } catch (Exception e2) {
+            Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private void turnFlashlightOff(){
+        try {
+            CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
+
+            for (String id : cameraManager.getCameraIdList()) {
+
+                // Turn on the flash if camera has one
+                if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
+
+                    cameraManager.setTorchMode(id, false);
+                }
+            }
+
+        } catch (Exception e2) {
+            Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }

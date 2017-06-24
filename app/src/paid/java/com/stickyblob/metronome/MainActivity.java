@@ -2,6 +2,7 @@ package com.stickyblob.metronome;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.media.MediaPlayer;
@@ -14,6 +15,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,13 +27,16 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    private static final int FAVORITES_REQUEST_CODE = 61;
 
     Handler mHandler = new Handler();
     Runnable mRunnable;
+    Handler mFlashLightHandler = new Handler();
+    Runnable mFlashLightRunnable;
     MediaPlayer mMediaPlayer;
 
-    private boolean toggle = false;
     private long timeNow;
+    boolean toggle = true;
     private long timeOld = 0;
     private double totalSeconds;
     private double averageSeconds;
@@ -38,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private double bpm;
     private long delay = 0;
     private int beatInMeasure = 0;
+    private long notification_time;
 
 
     private EditText mBPMinuteEditText;
@@ -86,6 +94,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mFlashLightRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if(toggle){
+                    turnFlashlightOn();
+                    toggle = false;
+                }else{
+                    turnFlashlightOff();
+                }
+                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+            }
+        };
+
         mRunnable = new Runnable() {
             @Override
             public void run() {
@@ -101,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 double some_num = 60.000 / milli_delay;
                 double millis = some_num * 1000;
                 delay = (int) Math.round(millis);
-                long notification_time = delay / 10;
+                notification_time = delay / 10;
                 if(notification_time > 100){
                     notification_time = 100;
                 }
@@ -109,7 +130,10 @@ public class MainActivity extends AppCompatActivity {
                     beatInMeasure = 0;
                 }
                 mVibrator.vibrate(notification_time);
-//                toggleFlashLight(2);
+                mFlashLightHandler.removeCallbacksAndMessages(null);
+                toggle = true;
+                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                Log.d(TAG, "run: notifc time = " + notification_time);
                 mHandler.postDelayed(this, delay);
             }
         };
@@ -134,9 +158,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult: requestCode = " + requestCode);
+        Log.d(TAG, "onActivityResult: resultCode = " + resultCode);
+        if(requestCode == RESULT_OK && resultCode == FAVORITES_REQUEST_CODE){
+            Log.d(TAG, "onActivityResult: here");
+        }
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         mHandler.removeCallbacksAndMessages(null);
+        mFlashLightHandler.removeCallbacksAndMessages(null);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.settings:
+                return true;
+            case R.id.favorites:
+                Intent intent = new Intent(this, FavoritesActivity.class);
+                startActivityForResult(intent, FAVORITES_REQUEST_CODE);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     // Button Callbacks
@@ -197,28 +252,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void stopBtnClicked(View view) {
         mHandler.removeCallbacksAndMessages(null);
+        mFlashLightHandler.removeCallbacksAndMessages(null);
     }
     // end of button callbacks
 
-
-    @TargetApi(Build.VERSION_CODES.M)
-    private void toggleFlashLight(int timeOn) {
-        toggle = !toggle;
-        try {
-            CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
-
-            for (String id : cameraManager.getCameraIdList()) {
-
-                // Turn on the flash if camera has one
-                if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
-                    cameraManager.setTorchMode(id, toggle);
-                }
-            }
-
-        } catch (Exception e2) {
-            Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
 
     private long testTime() {
         // get current time in millis
@@ -242,5 +279,43 @@ public class MainActivity extends AppCompatActivity {
         timeOld = 0;
 
         shouldSet = false;
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private void turnFlashlightOn(){
+        try {
+            CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
+
+            for (String id : cameraManager.getCameraIdList()) {
+
+                // Turn on the flash if camera has one
+                if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
+
+                    cameraManager.setTorchMode(id, true);
+                }
+            }
+
+        } catch (Exception e2) {
+            Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private void turnFlashlightOff(){
+        try {
+            CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
+
+            for (String id : cameraManager.getCameraIdList()) {
+
+                // Turn on the flash if camera has one
+                if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
+
+                    cameraManager.setTorchMode(id, false);
+                }
+            }
+
+        } catch (Exception e2) {
+            Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
