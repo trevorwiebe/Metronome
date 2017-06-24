@@ -4,20 +4,30 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
+    Handler mHandler = new Handler();
+    Runnable mRunnable;
+    MediaPlayer mMediaPlayer;
+
     private static final String TAG = "MainActivity";
-    private boolean toggle = true;
+    private boolean toggle = false;
     private long timeNow;
     private long timeOld = 0;
     private double totalSeconds;
@@ -25,10 +35,13 @@ public class MainActivity extends AppCompatActivity {
     private int divider = 1;
     boolean shouldSet = false;
     private double bpm;
+    private long delay = 0;
+    private int beatInMeasure = 0;
 
 
     private EditText mBPMinuteEditText;
     private EditText mBPMeasureEditText;
+    private TextView mBeatsInMeasure;
     private Button mTapToRhythmBtn;
 
     Vibrator mVibrator;
@@ -42,13 +55,21 @@ public class MainActivity extends AppCompatActivity {
         mVibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
         mBPMinuteEditText = (EditText) findViewById(R.id.bp_minute_et);
         mBPMeasureEditText = (EditText) findViewById(R.id.bp_measure_et);
+        mBeatsInMeasure = (TextView) findViewById(R.id.beat_in_measure_tv);
         mTapToRhythmBtn = (Button) findViewById(R.id.tap_to_rhythm_btn);
+
+        String tick = Environment.getExternalStorageDirectory() + "/Metronome-6-22-2017/tickmp3";
+
+        Log.d(TAG, "onCreate: " + tick);
+
+
+        mBeatsInMeasure.setText("0");
 
         mTapToRhythmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 long bpm = testTime();
-                if (bpm > 400) {
+                if (bpm > 500) {
                     bpm = 0;
                 }
                 mBPMinuteEditText.setText(Long.toString(bpm));
@@ -63,16 +84,76 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        mRunnable = new Runnable() {
+            @Override
+            public void run() {
+//                String tick = Environment.getExternalStorageDirectory().getPath() + "/Metronome-6-22-2017/tickmp3";
+//                try {
+//                    mMediaPlayer = MediaPlayer.create(this, Uri.parse(tick));
+//                }catch (Exception e){
+//                    Log.e(TAG, "run: ", e);
+//                }
+                beatInMeasure++;
+                mBeatsInMeasure.setText(Integer.toString(beatInMeasure));
+                long milli_delay = Long.parseLong(mBPMinuteEditText.getText().toString());
+                double some_num = 60.000 / milli_delay;
+                double millis = some_num * 1000;
+                delay = (int) Math.round(millis);
+                long notification_time = delay / 10;
+                if(notification_time > 100){
+                    notification_time = 100;
+                }
+                if(beatInMeasure >= Integer.parseInt(mBPMeasureEditText.getText().toString())){
+                    beatInMeasure = 0;
+                }
+                mVibrator.vibrate(notification_time);
+//                toggleFlashLight(2);
+                mHandler.postDelayed(this, delay);
+            }
+        };
+
+        mBPMinuteEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(s.toString().equals("")){
+                    mHandler.removeCallbacksAndMessages(null);
+                    delay = 0;
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mHandler.removeCallbacksAndMessages(null);
     }
 
     // Button Callbacks
     public void plusBPMinuteBtnClicked(View view) {
+        if (mBPMinuteEditText.getText().toString().equals("")) {
+            mBPMinuteEditText.setText("1");
+            return;
+        }
         long number = Long.parseLong(mBPMinuteEditText.getText().toString());
         long number2 = number + 1;
         mBPMinuteEditText.setText(Long.toString(number2));
     }
 
     public void minusBPMinuteBtnClicked(View view) {
+        if (mBPMinuteEditText.getText().toString().equals("")) {
+            mBPMinuteEditText.setText("0");
+            return;
+        }
         long number = Long.parseLong(mBPMinuteEditText.getText().toString());
         if (number == 0) {
             return;
@@ -82,30 +163,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void minusBPMeasureBtnClicked(View view) {
-
+        if(mBPMeasureEditText.getText().toString().equals("")){
+            mBPMeasureEditText.setText("0");
+        }
+        long number = Long.parseLong(mBPMeasureEditText.getText().toString());
+        if (number == 0) {
+            return;
+        }
+        long number2 = number - 1;
+        mBPMeasureEditText.setText(Long.toString(number2));
     }
 
     public void plusBPMeasureBtnClicked(View view) {
-
+        if(mBPMeasureEditText.getText().toString().equals("")){
+            mBPMeasureEditText.setText("1");
+            return;
+        }
+        long number = Long.parseLong(mBPMeasureEditText.getText().toString());
+        long number2 = number + 1;
+        mBPMeasureEditText.setText(Long.toString(number2));
     }
 
     public void startBtnClicked(View view) {
         resetBeatsPerMinute();
-        final int delay = 100;
-        final Handler h = new Handler();
-
-        h.postDelayed(new Runnable() {
-            public void run() {
-                toggle = true;
-                toggleFlashLight(2);
-                Log.d(TAG, "run: here");
-                h.postDelayed(this, delay);
-            }
-        }, delay);
+        mHandler.postDelayed(mRunnable, delay);
     }
 
     public void stopBtnClicked(View view) {
-
+        mHandler.removeCallbacksAndMessages(null);
     }
     // end of button callbacks
 
@@ -117,12 +202,15 @@ public class MainActivity extends AppCompatActivity {
             CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
 
             for (String id : cameraManager.getCameraIdList()) {
+
+                // Turn on the flash if camera has one
                 if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
                     cameraManager.setTorchMode(id, toggle);
                 }
             }
-        } catch (Exception e) {
-            Log.e(TAG, "toggleFlashLight: Cannot turn on flashlight", e);
+
+        } catch (Exception e2) {
+            Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

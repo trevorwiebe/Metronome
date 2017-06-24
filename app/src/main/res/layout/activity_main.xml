@@ -48,7 +48,7 @@
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
-        android:background="@drawable/tap_to_rhythm_btn"
+        android:background="@drawable/tap_to_rhythm_btn_selector"
         android:padding="@dimen/button_padding"
         android:text="@string/tap_to_rhythm_btn"
         android:textColor="@android:color/white"
@@ -215,9 +215,9 @@
 
     <View
         android:id="@+id/view"
-        android:background="@color/colorAccent"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:background="@drawable/play_circle"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:layout_marginRight="8dp"
         app:layout_constraintRight_toRightOf="parent"
         android:layout_marginBottom="8dp"
@@ -226,5 +226,21 @@
         app:layout_constraintTop_toBottomOf="@+id/imageView"
         android:layout_marginLeft="8dp"
         app:layout_constraintLeft_toLeftOf="parent"/>
+
+    <TextView
+        android:id="@+id/beat_in_measure_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        tools:text="4"
+        android:textSize="40sp"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="@+id/view"
+        app:layout_constraintLeft_toLeftOf="@+id/view"
+        app:layout_constraintRight_toRightOf="@+id/view"
+        app:layout_constraintTop_toTopOf="@+id/view"/>
 
 </android.support.constraint.ConstraintLayout>
