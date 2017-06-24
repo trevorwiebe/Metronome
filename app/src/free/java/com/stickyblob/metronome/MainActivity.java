@@ -20,13 +20,17 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
 
     Handler mHandler = new Handler();
     Runnable mRunnable;
     MediaPlayer mMediaPlayer;
 
-    private static final String TAG = "MainActivity";
     private boolean toggle = false;
     private long timeNow;
     private long timeOld = 0;
@@ -51,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        AdView adView = (AdView) findViewById(R.id.adView);
+        AdRequest.Builder adr = new AdRequest.Builder();
+        adView.loadAd(adr.build());
 
         mVibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
         mBPMinuteEditText = (EditText) findViewById(R.id.bp_minute_et);
@@ -238,4 +246,3 @@ public class MainActivity extends AppCompatActivity {
         shouldSet = false;
     }
 }
-

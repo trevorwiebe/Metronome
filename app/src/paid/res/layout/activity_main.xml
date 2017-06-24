@@ -8,7 +8,7 @@
     android:descendantFocusability="beforeDescendants"
     android:focusableInTouchMode="true"
     android:background="@android:color/white"
-    tools:context="com.stickyblob.metronome.MainActivity">
+    tools:context="com.stickyblob.metronome.MainActivityFragment">
 
     <TextView
         android:id="@+id/beats_per_minute_btn"
