@@ -187,6 +187,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void startBtnClicked(View view) {
         resetBeatsPerMinute();
+        if(mBPMinuteEditText.getText().toString().equals("0")){
+            return;
+        }else if(mBPMinuteEditText.getText().toString().equals("")){
+            return;
+        }
         mHandler.postDelayed(mRunnable, delay);
     }
 
