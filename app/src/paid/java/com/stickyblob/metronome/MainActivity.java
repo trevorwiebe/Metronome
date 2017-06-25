@@ -9,7 +9,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,7 +26,21 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener{
+import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.extractor.ogg.OggExtractor;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DataSpec;
+import com.google.android.exoplayer2.upstream.RawResourceDataSource;
+
+public class MainActivity extends AppCompatActivity
+        implements SensorEventListener{
 
     private static final String TAG = "MainActivity";
     private static final int FAVORITES_REQUEST_CODE = 61;
@@ -36,7 +49,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Runnable mRunnable;
     Handler mFlashLightHandler = new Handler();
     Runnable mFlashLightRunnable;
-    MediaPlayer mMediaPlayer;
+    //    MediaPlayer mMediaPlayer;
+    SimpleExoPlayer mExoPlayer;
     SensorManager mSensorManager;
     Sensor mSensor;
 
@@ -54,10 +68,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean shouldTurnFlashlightOff = true;
     private long lastUpdate = 0;
     private float last_x, last_y, last_z;
-    private static final int SHAKE_THRESHOLD = 200;
+    private static final int SHAKE_THRESHOLD = 600;
     private int num;
     private long timeOld2;
-
 
 
     private EditText mBPMinuteEditText;
@@ -78,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mVibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
         mBPMinuteEditText = (EditText) findViewById(R.id.bp_minute_et);
@@ -113,10 +126,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mFlashLightRunnable = new Runnable() {
             @Override
             public void run() {
-                if(toggle){
+                if (toggle) {
                     turnFlashlightOn();
                     toggle = false;
-                }else{
+                } else {
                     turnFlashlightOff();
                 }
                 mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
@@ -127,9 +140,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void run() {
                 beatInMeasure++;
-                if(beatInMeasure == 1){
+                if (beatInMeasure == 1) {
                     playAudio(R.raw.bubble_accent);
-                }else{
+                } else {
                     playAudio(R.raw.bubble);
                 }
                 mBeatsInMeasure.setText(Integer.toString(beatInMeasure));
@@ -138,10 +151,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 double millis = some_num * 1000;
                 delay = (int) Math.round(millis);
                 notification_time = delay / 10;
-                if(notification_time > 100){
+                if (notification_time > 100) {
                     notification_time = 100;
                 }
-                if(beatInMeasure >= Integer.parseInt(mBPMeasureEditText.getText().toString())){
+                if (beatInMeasure >= Integer.parseInt(mBPMeasureEditText.getText().toString())) {
                     beatInMeasure = 0;
                 }
                 mVibrator.vibrate(notification_time);
@@ -159,7 +172,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(s.toString().equals("")){
+                if (s.toString().equals("")) {
+                    showPlayBtn();
                     mHandler.removeCallbacksAndMessages(null);
                     delay = 0;
                 }
@@ -169,34 +183,45 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void afterTextChanged(Editable s) {
             }
         });
+
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
 
-        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
 
             long curTime = System.currentTimeMillis();
 
-            if ((curTime - lastUpdate) > 100) {
-                long diffTime = (curTime - lastUpdate);
-                lastUpdate = curTime;
+//            if ((curTime - lastUpdate) > 300) {
+            long diffTime = (curTime - lastUpdate);
+            lastUpdate = curTime;
 
-                float speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
 
-                if (speed > SHAKE_THRESHOLD) {
-                    Log.d(TAG, "onSensorChanged: " + speed);
+            if (-2 > x) {
+                Log.d(TAG, "onSensorChanged: x = " + x);
+                long bpm = updateBPM();
+                if (bpm > 500) {
+                    bpm = 0;
                 }
-
-                last_x = x;
-                last_y = y;
-                last_z = z;
+                mBPMinuteEditText.setText(Long.toString(bpm));
             }
+
+//                float speed = Math.abs(x + z - last_x - last_z) / diffTime * 10000;
+//
+//                if (speed > SHAKE_THRESHOLD) {
+//                    Log.d(TAG, "onSensorChanged: " + speed);
+//                }
+
+            last_x = x;
+            last_y = y;
+            last_z = z;
         }
+//        }
     }
 
     @Override
@@ -208,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "onActivityResult: requestCode = " + requestCode);
         Log.d(TAG, "onActivityResult: resultCode = " + resultCode);
-        if(requestCode == RESULT_OK && resultCode == FAVORITES_REQUEST_CODE){
+        if (requestCode == RESULT_OK && resultCode == FAVORITES_REQUEST_CODE) {
             Log.d(TAG, "onActivityResult: here");
         }
     }
@@ -224,10 +249,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onPause();
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
-        if(mMediaPlayer != null) {
-            mMediaPlayer.release();
-            mMediaPlayer = null;
-        }
+        releasePlayer();
+        showPlayBtn();
         mSensorManager.unregisterListener(this);
     }
 
@@ -240,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.settings:
                 return true;
             case R.id.favorites:
@@ -277,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void minusBPMeasureBtnClicked(View view) {
-        if(mBPMeasureEditText.getText().toString().equals("")){
+        if (mBPMeasureEditText.getText().toString().equals("")) {
             mBPMeasureEditText.setText("0");
         }
         long number = Long.parseLong(mBPMeasureEditText.getText().toString());
@@ -289,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void plusBPMeasureBtnClicked(View view) {
-        if(mBPMeasureEditText.getText().toString().equals("")){
+        if (mBPMeasureEditText.getText().toString().equals("")) {
             mBPMeasureEditText.setText("1");
             return;
         }
@@ -300,9 +323,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void startBtnClicked(View view) {
         resetBeatsPerMinute();
-        if(mBPMinuteEditText.getText().toString().equals("0")){
+        if (mBPMinuteEditText.getText().toString().equals("0")) {
             return;
-        }else if(mBPMinuteEditText.getText().toString().equals("")){
+        } else if (mBPMinuteEditText.getText().toString().equals("")) {
             return;
         }
         showPauseBtn();
@@ -313,10 +336,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         showPlayBtn();
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
-        if(mMediaPlayer != null) {
-            mMediaPlayer.release();
-            mMediaPlayer = null;
-        }
+        releasePlayer();
     }
     // end of button callbacks
 
@@ -346,7 +366,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private void turnFlashlightOn(){
+    private void turnFlashlightOn() {
         try {
             CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
 
@@ -366,8 +386,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private void turnFlashlightOff(){
-        if(shouldTurnFlashlightOff) {
+    private void turnFlashlightOff() {
+        if (shouldTurnFlashlightOff) {
             try {
                 CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
 
@@ -387,24 +407,51 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    private void playAudio(int file){
+
+    private void playAudio(int soundFile) {
+        // Create an instance of the ExoPlayer.
+        releasePlayer();
+        TrackSelector trackSelector = new DefaultTrackSelector();
+        LoadControl loadControl = new DefaultLoadControl();
+        mExoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
+
+        DataSpec dataSpec = new DataSpec(RawResourceDataSource.buildRawResourceUri(soundFile));
+        final RawResourceDataSource rawResourceDataSource = new RawResourceDataSource(this);
         try {
-            mMediaPlayer = MediaPlayer.create(getApplicationContext(), file);
-            mMediaPlayer.start();
-        }catch (Exception e){
-            Log.e(TAG, "run: ", e);
+            rawResourceDataSource.open(dataSpec);
+        } catch (Exception e) {
+            Log.e(TAG, "playAudio2: ", e);
         }
+
+        DataSource.Factory factory = new DataSource.Factory() {
+            @Override
+            public DataSource createDataSource() {
+                return rawResourceDataSource;
+            }
+        };
+
+        MediaSource audioSource = new ExtractorMediaSource(rawResourceDataSource.getUri(), factory, OggExtractor.FACTORY, null, null);
+
+        mExoPlayer.prepare(audioSource);
+
+        mExoPlayer.setPlayWhenReady(true);
     }
 
-
-    private void showPlayBtn(){
+    private void showPlayBtn() {
         mPlayBtn.setVisibility(View.VISIBLE);
         mPauseBtn.setVisibility(View.INVISIBLE);
     }
 
-    private void showPauseBtn(){
+    private void showPauseBtn() {
         mPauseBtn.setVisibility(View.VISIBLE);
         mPlayBtn.setVisibility(View.INVISIBLE);
     }
 
+    private void releasePlayer(){
+        if(mExoPlayer != null) {
+            mExoPlayer.stop();
+            mExoPlayer.release();
+            mExoPlayer = null;
+        }
+    }
 }
