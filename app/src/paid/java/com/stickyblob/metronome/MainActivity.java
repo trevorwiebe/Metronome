@@ -3,6 +3,10 @@ package com.stickyblob.metronome;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.media.MediaPlayer;
@@ -23,7 +27,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener{
 
     private static final String TAG = "MainActivity";
     private static final int FAVORITES_REQUEST_CODE = 61;
@@ -33,25 +37,35 @@ public class MainActivity extends AppCompatActivity {
     Handler mFlashLightHandler = new Handler();
     Runnable mFlashLightRunnable;
     MediaPlayer mMediaPlayer;
+    SensorManager mSensorManager;
+    Sensor mSensor;
 
     private long timeNow;
-    boolean toggle = true;
+    private boolean toggle = true;
     private long timeOld = 0;
     private double totalSeconds;
     private double averageSeconds;
     private int divider = 1;
-    boolean shouldSet = false;
+    private boolean shouldSet = false;
     private double bpm;
     private long delay = 0;
     private int beatInMeasure = 0;
     private long notification_time;
     private boolean shouldTurnFlashlightOff = true;
+    private long lastUpdate = 0;
+    private float last_x, last_y, last_z;
+    private static final int SHAKE_THRESHOLD = 200;
+    private int num;
+    private long timeOld2;
+
 
 
     private EditText mBPMinuteEditText;
     private EditText mBPMeasureEditText;
     private TextView mBeatsInMeasure;
     private Button mTapToRhythmBtn;
+    private Button mPlayBtn;
+    private Button mPauseBtn;
 
     Vibrator mVibrator;
 
@@ -62,17 +76,24 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mVibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
         mBPMinuteEditText = (EditText) findViewById(R.id.bp_minute_et);
         mBPMeasureEditText = (EditText) findViewById(R.id.bp_measure_et);
         mBeatsInMeasure = (TextView) findViewById(R.id.beat_in_measure_tv);
         mTapToRhythmBtn = (Button) findViewById(R.id.tap_to_rhythm_btn);
+        mPlayBtn = (Button) findViewById(R.id.go_btn);
+        mPauseBtn = (Button) findViewById(R.id.stop_btn);
 
         mBeatsInMeasure.setText("0");
 
         mTapToRhythmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                long bpm = testTime();
+                long bpm = updateBPM();
                 if (bpm > 500) {
                     bpm = 0;
                 }
@@ -107,9 +128,9 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 beatInMeasure++;
                 if(beatInMeasure == 1){
-                    playAccent(R.raw.bubble_accent);
+                    playAudio(R.raw.bubble_accent);
                 }else{
-                    playNonAccent(R.raw.bubble);
+                    playAudio(R.raw.bubble);
                 }
                 mBeatsInMeasure.setText(Integer.toString(beatInMeasure));
                 long milli_delay = Long.parseLong(mBPMinuteEditText.getText().toString());
@@ -151,6 +172,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onSensorChanged(SensorEvent event) {
+        Sensor sensor = event.sensor;
+
+        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+
+            long curTime = System.currentTimeMillis();
+
+            if ((curTime - lastUpdate) > 100) {
+                long diffTime = (curTime - lastUpdate);
+                lastUpdate = curTime;
+
+                float speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
+
+                if (speed > SHAKE_THRESHOLD) {
+                    Log.d(TAG, "onSensorChanged: " + speed);
+                }
+
+                last_x = x;
+                last_y = y;
+                last_z = z;
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "onActivityResult: requestCode = " + requestCode);
         Log.d(TAG, "onActivityResult: resultCode = " + resultCode);
@@ -160,14 +214,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onResume() {
+        super.onResume();
+        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
         if(mMediaPlayer != null) {
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
+        mSensorManager.unregisterListener(this);
     }
 
     @Override
@@ -244,10 +305,12 @@ public class MainActivity extends AppCompatActivity {
         }else if(mBPMinuteEditText.getText().toString().equals("")){
             return;
         }
+        showPauseBtn();
         mHandler.postDelayed(mRunnable, delay);
     }
 
     public void stopBtnClicked(View view) {
+        showPlayBtn();
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
         if(mMediaPlayer != null) {
@@ -258,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
     // end of button callbacks
 
 
-    private long testTime() {
+    private long updateBPM() {
         // get current time in millis
         timeNow = System.currentTimeMillis();
         if (shouldSet) {
@@ -324,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void playAccent(int file){
+    private void playAudio(int file){
         try {
             mMediaPlayer = MediaPlayer.create(getApplicationContext(), file);
             mMediaPlayer.start();
@@ -333,12 +396,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void playNonAccent(int file){
-        try {
-            mMediaPlayer = MediaPlayer.create(getApplicationContext(), file);
-            mMediaPlayer.start();
-        }catch (Exception e){
-            Log.e(TAG, "run: ", e);
-        }
+
+    private void showPlayBtn(){
+        mPlayBtn.setVisibility(View.VISIBLE);
+        mPauseBtn.setVisibility(View.INVISIBLE);
     }
+
+    private void showPauseBtn(){
+        mPauseBtn.setVisibility(View.VISIBLE);
+        mPlayBtn.setVisibility(View.INVISIBLE);
+    }
+
 }

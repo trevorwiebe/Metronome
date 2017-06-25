@@ -44,14 +44,14 @@
         android:id="@+id/tap_to_rhythm_btn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginRight="16dp"
         android:background="@drawable/tap_to_rhythm_btn_selector"
         android:padding="10dp"
         android:text="@string/tap_to_rhythm_btn"
         android:textColor="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        ads:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="16dp"
+        android:layout_marginRight="24dp"
+        ads:layout_constraintRight_toRightOf="parent"/>
 
     <Button
         android:id="@+id/plus_bp_minute_btn"
@@ -162,7 +162,7 @@
         android:ems="3"
         android:gravity="center"
         android:inputType="number"
-        android:text="0"
+        android:text="@string/zero"
         app:layout_constraintBaseline_toBaselineOf="@+id/minus_bp_measure_btn"
         app:layout_constraintRight_toLeftOf="@+id/minus_bp_measure_btn"/>
 
@@ -190,22 +190,22 @@
         android:id="@+id/go_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginLeft="16dp"
         android:background="@drawable/tap_to_rhythm_btn_selector"
         android:onClick="startBtnClicked"
         android:paddingBottom="18dp"
         android:paddingTop="18dp"
         android:text="@string/go_btn"
         android:textColor="@android:color/white"
-        app:layout_constraintBottom_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        ads:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        ads:layout_constraintLeft_toLeftOf="parent"/>
 
     <View
         android:id="@+id/view"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_marginBottom="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginTop="8dp"
@@ -235,25 +235,23 @@
         android:id="@+id/stop_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
         android:background="@drawable/tap_to_rhythm_btn_selector"
         android:onClick="stopBtnClicked"
         android:paddingBottom="18dp"
         android:paddingTop="18dp"
         android:text="@string/stop_btn"
+        android:visibility="invisible"
         android:textColor="@android:color/white"
-        app:layout_constraintBottom_toTopOf="parent"
-        app:layout_constraintLeft_toRightOf="@+id/go_btn"
-        app:layout_constraintRight_toLeftOf="@+id/tap_to_rhythm_btn"/>
+        ads:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        ads:layout_constraintLeft_toLeftOf="parent"/>
 
     <ImageButton
         android:id="@+id/no_sound_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginLeft="16dp"
         android:background="@android:color/white"
         android:paddingBottom="7dp"
         android:paddingLeft="18dp"
@@ -261,69 +259,91 @@
         android:paddingTop="7dp"
         android:visibility="invisible"
         ads:srcCompat="@drawable/metronome_no_sound_48px_black"
-        app:layout_constraintBottom_toTopOf="@+id/divider2"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        android:layout_marginBottom="16dp"
+        ads:layout_constraintBottom_toTopOf="@+id/divider2"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        ads:layout_constraintLeft_toLeftOf="parent"/>
 
     <ImageButton
         android:id="@+id/sound_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginLeft="16dp"
         android:background="@android:color/white"
         android:paddingBottom="7dp"
         android:paddingLeft="18dp"
         android:paddingRight="18dp"
         android:paddingTop="7dp"
         ads:srcCompat="@drawable/metronome_sound_48px_black"
-        app:layout_constraintBottom_toTopOf="@+id/divider2"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        android:layout_marginBottom="16dp"
+        ads:layout_constraintBottom_toTopOf="@+id/divider2"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        ads:layout_constraintLeft_toLeftOf="parent"/>
 
     <ImageButton
         android:id="@+id/light_on_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
         android:background="@android:color/white"
         android:paddingBottom="7dp"
         android:paddingLeft="18dp"
         android:paddingRight="18dp"
         android:paddingTop="7dp"
         ads:srcCompat="@drawable/metronome_light_on_48px_black"
-        app:layout_constraintBottom_toTopOf="@+id/divider2"
-        app:layout_constraintLeft_toRightOf="@+id/sound_btn"
-        app:layout_constraintRight_toLeftOf="@+id/imageButton5"/>
+        android:layout_marginBottom="16dp"
+        ads:layout_constraintBottom_toTopOf="@+id/divider2"
+        ads:layout_constraintRight_toLeftOf="@+id/imageButton5"
+        android:layout_marginRight="16dp"
+        ads:layout_constraintLeft_toRightOf="@+id/sound_btn"
+        android:layout_marginLeft="16dp"/>
 
     <ImageButton
         android:id="@+id/imageButton5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginRight="16dp"
         android:background="@android:color/white"
         android:paddingBottom="7dp"
         android:paddingLeft="18dp"
         android:paddingRight="18dp"
         android:paddingTop="7dp"
         ads:srcCompat="@drawable/metronome_flashlight_48px_black"
-        app:layout_constraintBottom_toTopOf="@+id/divider2"
-        app:layout_constraintRight_toRightOf="parent"/>
+        android:layout_marginBottom="16dp"
+        ads:layout_constraintBottom_toTopOf="@+id/divider2"
+        android:layout_marginRight="16dp"
+        android:layout_marginLeft="16dp"
+        ads:layout_constraintRight_toRightOf="parent"/>
 
     <ImageView
         android:id="@+id/divider2"
         android:layout_width="0dp"
         android:layout_height="1dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginBottom="16dp"
         android:background="@android:color/darker_gray"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        ads:layout_constraintBottom_toTopOf="@id/stop_btn"/>
+        ads:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        ads:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginBottom="16dp"
+        ads:layout_constraintBottom_toTopOf="@+id/shake_to_rhythm"/>
+
+    <Button
+        android:id="@+id/shake_to_rhythm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/shake_to_rhythm"
+        android:background="@drawable/tap_to_rhythm_btn_selector"
+        android:paddingTop="9dp"
+        android:paddingBottom="9dp"
+        android:textColor="@android:color/white"
+        ads:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="16dp"
+        ads:layout_constraintRight_toLeftOf="@+id/tap_to_rhythm_btn"
+        android:layout_marginRight="16dp"
+        ads:layout_constraintLeft_toRightOf="@+id/stop_btn"
+        android:layout_marginLeft="16dp"
+        ads:layout_constraintHorizontal_bias="0.493"/>
 
 </android.support.constraint.ConstraintLayout>
 
