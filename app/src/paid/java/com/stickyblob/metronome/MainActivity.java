@@ -23,7 +23,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -80,10 +79,6 @@ public class MainActivity extends AppCompatActivity
     private Button mTapToRhythmBtn;
     private Button mPlayBtn;
     private Button mPauseBtn;
-    private ImageButton mSoundOn;
-    private ImageButton mSoundOff;
-    private ImageButton mLightOn;
-    private ImageButton mLightOff;
 
     Vibrator mVibrator;
 
@@ -105,11 +100,6 @@ public class MainActivity extends AppCompatActivity
         mTapToRhythmBtn = (Button) findViewById(R.id.tap_to_rhythm_btn);
         mPlayBtn = (Button) findViewById(R.id.go_btn);
         mPauseBtn = (Button) findViewById(R.id.stop_btn);
-        mSoundOn = (ImageButton) findViewById(R.id.sound_btn);
-        mSoundOff = (ImageButton) findViewById(R.id.no_sound_btn);
-        mLightOn = (ImageButton) findViewById(R.id.light_on_btn);
-        mLightOff = (ImageButton) findViewById(R.id.light_off_btn);
-
         mBeatsInMeasure.setText("0");
 
         mTapToRhythmBtn.setOnClickListener(new View.OnClickListener() {
@@ -166,10 +156,10 @@ public class MainActivity extends AppCompatActivity
                 if (beatInMeasure >= Integer.parseInt(mBPMeasureEditText.getText().toString())) {
                     beatInMeasure = 0;
                 }
-                mVibrator.vibrate(notification_time);
-                mFlashLightHandler.removeCallbacksAndMessages(null);
-                toggle = true;
-                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+//                mVibrator.vibrate(notification_time);
+//                mFlashLightHandler.removeCallbacksAndMessages(null);
+//                toggle = true;
+//                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
                 mHandler.postDelayed(this, delay);
             }
         };
@@ -190,12 +180,16 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void afterTextChanged(Editable s) {
+                if(s.toString().equals("")){
+                    return;
+                }
+                if(Long.parseLong(s.toString()) > 300 ){
+                    mBPMinuteEditText.setText("300");
+                }
             }
         });
 
         setStartBtn();
-        setSoundOnBtn();
-        setLightOnBtn();
     }
 
     @Override
@@ -277,6 +271,8 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.settings:
+                Intent settingsIntent = new Intent(this, SettingsActivity.class);
+                startActivity(settingsIntent);
                 return true;
             case R.id.favorites:
                 Intent intent = new Intent(this, FavoritesActivity.class);
@@ -332,24 +328,6 @@ public class MainActivity extends AppCompatActivity
         long number2 = number + 1;
         mBPMeasureEditText.setText(Long.toString(number2));
     }
-
-//    public void startBtnClicked(View view) {
-//        resetBPM();
-//        if (mBPMinuteEditText.getText().toString().equals("0")) {
-//            return;
-//        } else if (mBPMinuteEditText.getText().toString().equals("")) {
-//            return;
-//        }
-//        showPauseBtn();
-//        mHandler.postDelayed(mRunnable, delay);
-//    }
-//
-//    public void stopBtnClicked(View view) {
-//        showPlayBtn();
-//        mHandler.removeCallbacksAndMessages(null);
-//        mFlashLightHandler.removeCallbacksAndMessages(null);
-//        releasePlayer();
-//    }
     // end of button callbacks
 
 
@@ -459,26 +437,6 @@ public class MainActivity extends AppCompatActivity
         mPlayBtn.setVisibility(View.INVISIBLE);
     }
 
-    private void showSoundOn(){
-        mSoundOn.setVisibility(View.VISIBLE);
-        mSoundOff.setVisibility(View.INVISIBLE);
-    }
-
-    private void showSoundOff(){
-        mSoundOff.setVisibility(View.VISIBLE);
-        mSoundOn.setVisibility(View.INVISIBLE);
-    }
-
-    private void showLightOn(){
-        mLightOn.setVisibility(View.VISIBLE);
-        mLightOff.setVisibility(View.INVISIBLE);
-    }
-
-    private void showLightOff(){
-        mLightOn.setVisibility(View.INVISIBLE);
-        mLightOff.setVisibility(View.VISIBLE);
-    }
-
     private void releasePlayer(){
         if(mExoPlayer != null) {
             mExoPlayer.stop();
@@ -513,46 +471,6 @@ public class MainActivity extends AppCompatActivity
                 mHandler.removeCallbacksAndMessages(null);
                 mFlashLightHandler.removeCallbacksAndMessages(null);
                 releasePlayer();
-            }
-        });
-    }
-
-    private void setSoundOnBtn(){
-        mSoundOn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showSoundOff();
-                setSoundOffBtn();
-            }
-        });
-    }
-
-    private void setSoundOffBtn(){
-        mSoundOff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showSoundOn();
-                setSoundOnBtn();
-            }
-        });
-    }
-
-    private void setLightOnBtn(){
-        mLightOn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setLightOffBtn();
-                showLightOff();
-            }
-        });
-    }
-
-    private void setLightOffBtn(){
-        mLightOff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setLightOnBtn();
-                showLightOn();
             }
         });
     }

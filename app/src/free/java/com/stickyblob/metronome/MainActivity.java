@@ -2,6 +2,7 @@ package com.stickyblob.metronome;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
@@ -12,10 +13,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,10 +66,6 @@ public class MainActivity extends AppCompatActivity {
     private Button mTapToRhythmBtn;
     private Button mPlayBtn;
     private Button mPauseBtn;
-    private ImageButton mSoundOn;
-    private ImageButton mSoundOff;
-    private ImageButton mLightOn;
-    private ImageButton mLightOff;
 
     Vibrator mVibrator;
 
@@ -87,10 +86,6 @@ public class MainActivity extends AppCompatActivity {
         mTapToRhythmBtn = (Button) findViewById(R.id.tap_to_rhythm_btn);
         mPlayBtn = (Button) findViewById(R.id.go_btn);
         mPauseBtn = (Button) findViewById(R.id.stop_btn);
-        mSoundOn = (ImageButton) findViewById(R.id.sound_btn_free);
-        mSoundOff = (ImageButton) findViewById(R.id.no_sound_btn_free);
-        mLightOn = (ImageButton) findViewById(R.id.light_on_btn_free);
-        mLightOff = (ImageButton) findViewById(R.id.light_off_btn_free);
 
         mBeatsInMeasure.setText("0");
 
@@ -170,12 +165,16 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
+                if(s.toString().equals("")){
+                    return;
+                }
+                if(Long.parseLong(s.toString()) > 300 ){
+                    mBPMinuteEditText.setText("300");
+                }
             }
         });
 
         setStartBtn();
-        setSoundOnBtn();
-        setLightOnBtn();
     }
     @Override
     protected void onDestroy() {
@@ -183,6 +182,27 @@ public class MainActivity extends AppCompatActivity {
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
         releasePlayer();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.settings:
+                Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(settingsIntent);
+                return true;
+            case R.id.upgrade:
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     // Button Callbacks
@@ -333,26 +353,6 @@ public class MainActivity extends AppCompatActivity {
         mPlayBtn.setVisibility(View.INVISIBLE);
     }
 
-    private void showSoundOn(){
-        mSoundOn.setVisibility(View.VISIBLE);
-        mSoundOff.setVisibility(View.INVISIBLE);
-    }
-
-    private void showSoundOff(){
-        mSoundOff.setVisibility(View.VISIBLE);
-        mSoundOn.setVisibility(View.INVISIBLE);
-    }
-
-    private void showLightOn(){
-        mLightOn.setVisibility(View.VISIBLE);
-        mLightOff.setVisibility(View.INVISIBLE);
-    }
-
-    private void showLightOff(){
-        mLightOn.setVisibility(View.INVISIBLE);
-        mLightOff.setVisibility(View.VISIBLE);
-    }
-
     private void releasePlayer(){
         if(mExoPlayer != null) {
             mExoPlayer.stop();
@@ -391,45 +391,4 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void setSoundOnBtn(){
-        mSoundOn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "onClick: sound on");
-                showSoundOff();
-                setSoundOffBtn();
-            }
-        });
-    }
-
-    private void setSoundOffBtn(){
-        mSoundOff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "onClick: sound off");
-                showSoundOn();
-                setSoundOnBtn();
-            }
-        });
-    }
-
-    private void setLightOnBtn(){
-        mLightOn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setLightOffBtn();
-                showLightOff();
-            }
-        });
-    }
-
-    private void setLightOffBtn(){
-        mLightOff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setLightOnBtn();
-                showLightOn();
-            }
-        });
-    }
 }
