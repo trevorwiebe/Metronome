@@ -10,4 +10,8 @@
     <string name="go_btn">Start</string>
     <string name="stop_btn">Stop</string>
     <string name="zero">0</string>
+
+    <string name="vibration_prefs_key" translatable="false">vibration_prefs</string>
+    <string name="flashlight_prefs_key" translatable="false">flashlight_prefs</string>
+    <string name="sound_prefs_key" translatable="false">sound_prefs</string>
 </resources>

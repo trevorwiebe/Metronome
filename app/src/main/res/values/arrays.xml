@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="vibration_options">
+        <item>No Vibration</item>
+        <item>On Accent Beat</item>
+        <item>Every Beat</item>
+    </array>
+
+    <array name="vibration_alias">
+        <item>no_vb</item>
+        <item>on_ac_vb</item>
+        <item>ev_bt_vb</item>
+    </array>
+
+    <array name="light_options">
+        <item>No Flashlight</item>
+        <item>On Accent Beat</item>
+        <item>Every Beat</item>
+    </array>
+
+    <array name="light_alias">
+        <item>no_lt</item>
+        <item>on_ac_lt</item>
+        <item>ev_bt_lt</item>
+    </array>
+
+    <array name="sound_options">
+        <item>No Sound</item>
+        <item>On Accent Beat</item>
+        <item>Every Beat</item>
+    </array>
+
+    <array name="sound_alias">
+        <item>no_sd</item>
+        <item>on_ac_sd</item>
+        <item>ev_bt_sd</item>
+    </array>
+
+</resources>

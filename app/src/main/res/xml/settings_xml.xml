@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ListPreference
+        android:title="Vibration"
+        android:key="@string/vibration_prefs_key"
+        android:entryValues="@array/vibration_alias"
+        android:entries="@array/vibration_options"/>
+
+    <ListPreference
+        android:title="Flashlight"
+        android:key="@string/flashlight_prefs_key"
+        android:entryValues="@array/light_alias"
+        android:entries="@array/light_options"/>
+
+    <ListPreference
+        android:title="Sound"
+        android:key="@string/sound_prefs_key"
+        android:entryValues="@array/sound_alias"
+        android:entries="@array/sound_options"/>
+
+</PreferenceScreen>
