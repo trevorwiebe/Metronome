@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity
         mTapToRhythmBtn.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                resetBeatsPerMinute();
+                resetBPM();
                 mVibrator.vibrate(25);
                 return false;
             }
@@ -184,6 +184,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        setStartBtn();
     }
 
     @Override
@@ -203,12 +204,12 @@ public class MainActivity extends AppCompatActivity
 
 
             if (-2 > x) {
-                Log.d(TAG, "onSensorChanged: x = " + x);
-                long bpm = updateBPM();
-                if (bpm > 500) {
-                    bpm = 0;
-                }
-                mBPMinuteEditText.setText(Long.toString(bpm));
+//                Log.d(TAG, "onSensorChanged: x = " + x);
+//                long bpm = updateBPM();
+//                if (bpm > 500) {
+//                    bpm = 0;
+//                }
+//                mBPMinuteEditText.setText(Long.toString(bpm));
             }
 
 //                float speed = Math.abs(x + z - last_x - last_z) / diffTime * 10000;
@@ -245,8 +246,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onDestroy() {
+        super.onDestroy();
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
         releasePlayer();
@@ -321,23 +322,23 @@ public class MainActivity extends AppCompatActivity
         mBPMeasureEditText.setText(Long.toString(number2));
     }
 
-    public void startBtnClicked(View view) {
-        resetBeatsPerMinute();
-        if (mBPMinuteEditText.getText().toString().equals("0")) {
-            return;
-        } else if (mBPMinuteEditText.getText().toString().equals("")) {
-            return;
-        }
-        showPauseBtn();
-        mHandler.postDelayed(mRunnable, delay);
-    }
-
-    public void stopBtnClicked(View view) {
-        showPlayBtn();
-        mHandler.removeCallbacksAndMessages(null);
-        mFlashLightHandler.removeCallbacksAndMessages(null);
-        releasePlayer();
-    }
+//    public void startBtnClicked(View view) {
+//        resetBPM();
+//        if (mBPMinuteEditText.getText().toString().equals("0")) {
+//            return;
+//        } else if (mBPMinuteEditText.getText().toString().equals("")) {
+//            return;
+//        }
+//        showPauseBtn();
+//        mHandler.postDelayed(mRunnable, delay);
+//    }
+//
+//    public void stopBtnClicked(View view) {
+//        showPlayBtn();
+//        mHandler.removeCallbacksAndMessages(null);
+//        mFlashLightHandler.removeCallbacksAndMessages(null);
+//        releasePlayer();
+//    }
     // end of button callbacks
 
 
@@ -357,7 +358,7 @@ public class MainActivity extends AppCompatActivity
         return Math.round(bpm);
     }
 
-    private void resetBeatsPerMinute() {
+    private void resetBPM() {
         divider = 0;
         totalSeconds = 0;
         timeOld = 0;
@@ -453,5 +454,35 @@ public class MainActivity extends AppCompatActivity
             mExoPlayer.release();
             mExoPlayer = null;
         }
+    }
+
+    private void setStartBtn(){
+        mPlayBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPauseBtn();
+                showPauseBtn();
+                resetBPM();
+                if(mBPMinuteEditText.getText().toString().equals("0")){
+                    return;
+                }else if(mBPMinuteEditText.getText().toString().equals("")){
+                    return;
+                }
+                mHandler.postDelayed(mRunnable, delay);
+            }
+        });
+    }
+
+    private void setPauseBtn(){
+        mPauseBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setStartBtn();
+                showPlayBtn();
+                mHandler.removeCallbacksAndMessages(null);
+                mFlashLightHandler.removeCallbacksAndMessages(null);
+                releasePlayer();
+            }
+        });
     }
 }

@@ -4,10 +4,8 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
@@ -20,6 +18,18 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.extractor.ogg.OggExtractor;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DataSpec;
+import com.google.android.exoplayer2.upstream.RawResourceDataSource;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
@@ -31,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     Runnable mRunnable;
     Handler mFlashLightHandler = new Handler();
     Runnable mFlashLightRunnable;
-    MediaPlayer mMediaPlayer;
+    SimpleExoPlayer mExoPlayer;
 
     private boolean toggle = false;
     private long timeNow;
@@ -50,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText mBPMeasureEditText;
     private TextView mBeatsInMeasure;
     private Button mTapToRhythmBtn;
+    private Button mStartBtn;
+    private Button mStopBtn;
 
     Vibrator mVibrator;
 
@@ -68,18 +80,15 @@ public class MainActivity extends AppCompatActivity {
         mBPMeasureEditText = (EditText) findViewById(R.id.bp_measure_et);
         mBeatsInMeasure = (TextView) findViewById(R.id.beat_in_measure_tv);
         mTapToRhythmBtn = (Button) findViewById(R.id.tap_to_rhythm_btn);
-
-        String tick = Environment.getExternalStorageDirectory() + "/Metronome-6-22-2017/tickmp3";
-
-        Log.d(TAG, "onCreate: " + tick);
-
+        mStartBtn = (Button) findViewById(R.id.go_btn);
+        mStopBtn = (Button) findViewById(R.id.stop_btn);
 
         mBeatsInMeasure.setText("0");
 
         mTapToRhythmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                long bpm = testTime();
+                long bpm = updateBPM();
                 if (bpm > 500) {
                     bpm = 0;
                 }
@@ -114,9 +123,9 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 beatInMeasure++;
                 if(beatInMeasure == 1){
-                    playAccent(R.raw.bubble_accent);
+                    playAudio(R.raw.bubble_accent);
                 }else{
-                    playNonAccent(R.raw.bubble);
+                    playAudio(R.raw.bubble);
                 }
                 mBeatsInMeasure.setText(Integer.toString(beatInMeasure));
                 long milli_delay = Long.parseLong(mBPMinuteEditText.getText().toString());
@@ -129,12 +138,10 @@ public class MainActivity extends AppCompatActivity {
                 }
                 toggle = true;
                 mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
-                Log.d(TAG, "run: notifc time = " + notification_time);
                 if(beatInMeasure >= Integer.parseInt(mBPMeasureEditText.getText().toString())){
                     beatInMeasure = 0;
                 }
                 mVibrator.vibrate(notification_time);
-//                toggleFlashLight(2);
                 mHandler.postDelayed(this, delay);
             }
         };
@@ -156,12 +163,15 @@ public class MainActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
             }
         });
+
+        setStartBtn();
     }
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
+        releasePlayer();
     }
 
     // Button Callbacks
@@ -209,26 +219,9 @@ public class MainActivity extends AppCompatActivity {
         long number2 = number + 1;
         mBPMeasureEditText.setText(Long.toString(number2));
     }
-
-    public void startBtnClicked(View view) {
-        resetBeatsPerMinute();
-        if(mBPMinuteEditText.getText().toString().equals("0")){
-            return;
-        }else if(mBPMinuteEditText.getText().toString().equals("")){
-            return;
-        }
-        mHandler.postDelayed(mRunnable, delay);
-    }
-
-    public void stopBtnClicked(View view) {
-        mHandler.removeCallbacksAndMessages(null);
-        mFlashLightHandler.removeCallbacksAndMessages(null);
-    }
     // end of button callbacks
 
-
-
-    private long testTime() {
+    private long updateBPM() {
         // get current time in millis
         timeNow = System.currentTimeMillis();
         if (shouldSet) {
@@ -290,21 +283,72 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void playAccent(int file){
+    private void playAudio(int soundFile) {
+        // Create an instance of the ExoPlayer.
+        releasePlayer();
+        TrackSelector trackSelector = new DefaultTrackSelector();
+        LoadControl loadControl = new DefaultLoadControl();
+        mExoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
+
+        DataSpec dataSpec = new DataSpec(RawResourceDataSource.buildRawResourceUri(soundFile));
+        final RawResourceDataSource rawResourceDataSource = new RawResourceDataSource(this);
         try {
-            mMediaPlayer = MediaPlayer.create(getApplicationContext(), file);
-            mMediaPlayer.start();
-        }catch (Exception e){
-            Log.e(TAG, "run: ", e);
+            rawResourceDataSource.open(dataSpec);
+        } catch (Exception e) {
+            Log.e(TAG, "playAudio2: ", e);
+        }
+
+        DataSource.Factory factory = new DataSource.Factory() {
+            @Override
+            public DataSource createDataSource() {
+                return rawResourceDataSource;
+            }
+        };
+
+        MediaSource audioSource = new ExtractorMediaSource(rawResourceDataSource.getUri(), factory, OggExtractor.FACTORY, null, null);
+
+        mExoPlayer.prepare(audioSource);
+
+        mExoPlayer.setPlayWhenReady(true);
+    }
+
+    private void releasePlayer(){
+        if(mExoPlayer != null) {
+            mExoPlayer.stop();
+            mExoPlayer.release();
+            mExoPlayer = null;
         }
     }
 
-    private void playNonAccent(int file){
-        try {
-            mMediaPlayer = MediaPlayer.create(getApplicationContext(), file);
-            mMediaPlayer.start();
-        }catch (Exception e){
-            Log.e(TAG, "run: ", e);
-        }
+    private void setStartBtn(){
+        mStartBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPauseBtn();
+                mStartBtn.setVisibility(View.INVISIBLE);
+                mStopBtn.setVisibility(View.VISIBLE);
+                resetBeatsPerMinute();
+                if(mBPMinuteEditText.getText().toString().equals("0")){
+                    return;
+                }else if(mBPMinuteEditText.getText().toString().equals("")){
+                    return;
+                }
+                mHandler.postDelayed(mRunnable, delay);
+            }
+        });
+    }
+
+    private void setPauseBtn(){
+        mStopBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setStartBtn();
+                mStopBtn.setVisibility(View.INVISIBLE);
+                mStartBtn.setVisibility(View.VISIBLE);
+                mHandler.removeCallbacksAndMessages(null);
+                mFlashLightHandler.removeCallbacksAndMessages(null);
+                releasePlayer();
+            }
+        });
     }
 }

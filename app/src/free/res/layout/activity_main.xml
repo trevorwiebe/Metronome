@@ -174,7 +174,6 @@
         app:layout_constraintTop_toBottomOf="@+id/imageView"
         />
 
-
     <ImageButton
         android:id="@+id/no_sound_btn"
         android:layout_width="wrap_content"
@@ -247,17 +246,18 @@
         android:id="@+id/go_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
         android:background="@drawable/tap_to_rhythm_btn_selector"
         android:onClick="startBtnClicked"
-        android:paddingBottom="18dp"
-        android:paddingTop="18dp"
+        android:paddingBottom="18sp"
+        android:paddingTop="18sp"
         android:text="@string/go_btn"
         android:textColor="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@+id/adView"
-        android:layout_marginLeft="16dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_marginStart="16dp"/>
+        app:layout_constraintRight_toLeftOf="@+id/guideline"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/adView"/>
 
     <Button
         android:id="@+id/stop_btn"
@@ -265,32 +265,30 @@
         android:layout_height="wrap_content"
         android:background="@drawable/tap_to_rhythm_btn_selector"
         android:onClick="stopBtnClicked"
-        android:paddingBottom="18dp"
-        android:paddingTop="18dp"
+        android:paddingBottom="18sp"
+        android:paddingTop="18sp"
         android:text="@string/stop_btn"
+        android:visibility="invisible"
         android:textColor="@android:color/white"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toTopOf="@+id/adView"
-        app:layout_constraintRight_toLeftOf="@+id/tap_to_rhythm_btn"
         android:layout_marginRight="8dp"
-        app:layout_constraintLeft_toRightOf="@+id/go_btn"
-        android:layout_marginLeft="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"/>
+        app:layout_constraintRight_toLeftOf="@id/guideline"/>
 
     <Button
         android:id="@+id/tap_to_rhythm_btn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
         android:background="@drawable/tap_to_rhythm_btn_selector"
         android:padding="10dp"
         android:text="@string/tap_to_rhythm_btn"
         android:textColor="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@+id/adView"
-        android:layout_marginRight="16dp"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginEnd="16dp"/>
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="@+id/guideline"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/adView"/>
 
 
     <ImageView
@@ -332,6 +330,13 @@
         app:layout_constraintRight_toRightOf="@+id/view"
         app:layout_constraintTop_toTopOf="@+id/view"
         tools:text="4"/>
+
+    <android.support.constraint.Guideline
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/guideline"
+        app:layout_constraintGuide_begin="192dp"
+        android:orientation="vertical"/>
 
 
 </android.support.constraint.ConstraintLayout>
