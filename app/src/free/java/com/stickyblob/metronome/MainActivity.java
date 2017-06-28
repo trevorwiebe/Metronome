@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,8 +61,12 @@ public class MainActivity extends AppCompatActivity {
     private EditText mBPMeasureEditText;
     private TextView mBeatsInMeasure;
     private Button mTapToRhythmBtn;
-    private Button mStartBtn;
-    private Button mStopBtn;
+    private Button mPlayBtn;
+    private Button mPauseBtn;
+    private ImageButton mSoundOn;
+    private ImageButton mSoundOff;
+    private ImageButton mLightOn;
+    private ImageButton mLightOff;
 
     Vibrator mVibrator;
 
@@ -80,8 +85,12 @@ public class MainActivity extends AppCompatActivity {
         mBPMeasureEditText = (EditText) findViewById(R.id.bp_measure_et);
         mBeatsInMeasure = (TextView) findViewById(R.id.beat_in_measure_tv);
         mTapToRhythmBtn = (Button) findViewById(R.id.tap_to_rhythm_btn);
-        mStartBtn = (Button) findViewById(R.id.go_btn);
-        mStopBtn = (Button) findViewById(R.id.stop_btn);
+        mPlayBtn = (Button) findViewById(R.id.go_btn);
+        mPauseBtn = (Button) findViewById(R.id.stop_btn);
+        mSoundOn = (ImageButton) findViewById(R.id.sound_btn_free);
+        mSoundOff = (ImageButton) findViewById(R.id.no_sound_btn_free);
+        mLightOn = (ImageButton) findViewById(R.id.light_on_btn_free);
+        mLightOff = (ImageButton) findViewById(R.id.light_off_btn_free);
 
         mBeatsInMeasure.setText("0");
 
@@ -99,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         mTapToRhythmBtn.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                resetBeatsPerMinute();
+                resetBPM();
                 mVibrator.vibrate(25);
                 return false;
             }
@@ -165,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         setStartBtn();
+        setSoundOnBtn();
+        setLightOnBtn();
     }
     @Override
     protected void onDestroy() {
@@ -237,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
         return Math.round(bpm);
     }
 
-    private void resetBeatsPerMinute() {
+    private void resetBPM() {
         divider = 0;
         totalSeconds = 0;
         timeOld = 0;
@@ -312,6 +323,36 @@ public class MainActivity extends AppCompatActivity {
         mExoPlayer.setPlayWhenReady(true);
     }
 
+    private void showPlayBtn() {
+        mPlayBtn.setVisibility(View.VISIBLE);
+        mPauseBtn.setVisibility(View.INVISIBLE);
+    }
+
+    private void showPauseBtn() {
+        mPauseBtn.setVisibility(View.VISIBLE);
+        mPlayBtn.setVisibility(View.INVISIBLE);
+    }
+
+    private void showSoundOn(){
+        mSoundOn.setVisibility(View.VISIBLE);
+        mSoundOff.setVisibility(View.INVISIBLE);
+    }
+
+    private void showSoundOff(){
+        mSoundOff.setVisibility(View.VISIBLE);
+        mSoundOn.setVisibility(View.INVISIBLE);
+    }
+
+    private void showLightOn(){
+        mLightOn.setVisibility(View.VISIBLE);
+        mLightOff.setVisibility(View.INVISIBLE);
+    }
+
+    private void showLightOff(){
+        mLightOn.setVisibility(View.INVISIBLE);
+        mLightOff.setVisibility(View.VISIBLE);
+    }
+
     private void releasePlayer(){
         if(mExoPlayer != null) {
             mExoPlayer.stop();
@@ -321,13 +362,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setStartBtn(){
-        mStartBtn.setOnClickListener(new View.OnClickListener() {
+        mPlayBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 setPauseBtn();
-                mStartBtn.setVisibility(View.INVISIBLE);
-                mStopBtn.setVisibility(View.VISIBLE);
-                resetBeatsPerMinute();
+                showPauseBtn();
+                resetBPM();
                 if(mBPMinuteEditText.getText().toString().equals("0")){
                     return;
                 }else if(mBPMinuteEditText.getText().toString().equals("")){
@@ -339,15 +379,56 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setPauseBtn(){
-        mStopBtn.setOnClickListener(new View.OnClickListener() {
+        mPauseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 setStartBtn();
-                mStopBtn.setVisibility(View.INVISIBLE);
-                mStartBtn.setVisibility(View.VISIBLE);
+                showPlayBtn();
                 mHandler.removeCallbacksAndMessages(null);
                 mFlashLightHandler.removeCallbacksAndMessages(null);
                 releasePlayer();
+            }
+        });
+    }
+
+    private void setSoundOnBtn(){
+        mSoundOn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: sound on");
+                showSoundOff();
+                setSoundOffBtn();
+            }
+        });
+    }
+
+    private void setSoundOffBtn(){
+        mSoundOff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: sound off");
+                showSoundOn();
+                setSoundOnBtn();
+            }
+        });
+    }
+
+    private void setLightOnBtn(){
+        mLightOn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setLightOffBtn();
+                showLightOff();
+            }
+        });
+    }
+
+    private void setLightOffBtn(){
+        mLightOff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setLightOnBtn();
+                showLightOn();
             }
         });
     }
