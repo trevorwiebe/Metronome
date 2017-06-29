@@ -2,22 +2,20 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <ListPreference
-        android:title="Vibration"
-        android:key="@string/vibration_prefs_key"
-        android:entryValues="@array/vibration_alias"
-        android:entries="@array/vibration_options"/>
+    <CheckBoxPreference
+        android:title="@string/vibrate_title"
+        android:defaultValue="@bool/vibrate_default_value"
+        android:key="@string/vibration_prefs_key"/>
 
-    <ListPreference
-        android:title="Flashlight"
-        android:key="@string/flashlight_prefs_key"
-        android:entryValues="@array/light_alias"
-        android:entries="@array/light_options"/>
 
-    <ListPreference
-        android:title="Sound"
-        android:key="@string/sound_prefs_key"
-        android:entryValues="@array/sound_alias"
-        android:entries="@array/sound_options"/>
+    <CheckBoxPreference
+        android:title="@string/flash_light_title"
+        android:defaultValue="@bool/light_default_value"
+        android:key="@string/flashlight_prefs_key"/>
+
+    <CheckBoxPreference
+        android:title="@string/sound_title"
+        android:defaultValue="@bool/sound_default_value"
+        app:key="@string/sound_prefs_key"/>
 
 </PreferenceScreen>

@@ -4,14 +4,8 @@
 
     <item
         android:title="@string/settings"
+        android:id="@+id/settings"
         android:orderInCategory="100"
-        app:showAsAction="never"
-        android:id="@+id/settings"/>
-
-    <item
-        android:title="@string/favorites"
-        android:orderInCategory="100"
-        app:showAsAction="never"
-        android:id="@+id/favorites"/>
+        app:showAsAction="never"/>
 
 </menu>

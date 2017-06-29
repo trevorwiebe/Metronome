@@ -1,6 +1,8 @@
 package com.stickyblob.metronome;
 
+
 import android.os.Bundle;
+
 import android.support.v7.preference.PreferenceFragmentCompat;
 
 /**
@@ -13,6 +15,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
 
         addPreferencesFromResource(R.xml.settings_xml);
-    }
 
+    }
 }

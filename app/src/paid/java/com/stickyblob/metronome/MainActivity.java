@@ -3,16 +3,14 @@ package com.stickyblob.metronome;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
+import android.content.SharedPreferences;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -39,38 +37,28 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.RawResourceDataSource;
 
-public class MainActivity extends AppCompatActivity
-        implements SensorEventListener{
+public class MainActivity extends AppCompatActivity{
 
     private static final String TAG = "MainActivity";
-    private static final int FAVORITES_REQUEST_CODE = 61;
 
     Handler mHandler = new Handler();
     Runnable mRunnable;
     Handler mFlashLightHandler = new Handler();
     Runnable mFlashLightRunnable;
-    //    MediaPlayer mMediaPlayer;
     SimpleExoPlayer mExoPlayer;
-    SensorManager mSensorManager;
-    Sensor mSensor;
 
+    private boolean toggle = false;
     private long timeNow;
-    private boolean toggle = true;
     private long timeOld = 0;
     private double totalSeconds;
     private double averageSeconds;
     private int divider = 1;
-    private boolean shouldSet = false;
+    boolean shouldSet = false;
     private double bpm;
     private long delay = 0;
     private int beatInMeasure = 0;
     private long notification_time;
-    private boolean shouldTurnFlashlightOff = true;
-    private long lastUpdate = 0;
-    private float last_x, last_y, last_z;
-    private static final int SHAKE_THRESHOLD = 600;
-    private int num;
-    private long timeOld2;
+    private int should_turn_light_off = 0;
 
 
     private EditText mBPMinuteEditText;
@@ -89,17 +77,13 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         mVibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
-
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
-
         mBPMinuteEditText = (EditText) findViewById(R.id.bp_minute_et);
         mBPMeasureEditText = (EditText) findViewById(R.id.bp_measure_et);
         mBeatsInMeasure = (TextView) findViewById(R.id.beat_in_measure_tv);
         mTapToRhythmBtn = (Button) findViewById(R.id.tap_to_rhythm_btn);
         mPlayBtn = (Button) findViewById(R.id.go_btn);
         mPauseBtn = (Button) findViewById(R.id.stop_btn);
+
         mBeatsInMeasure.setText("0");
 
         mTapToRhythmBtn.setOnClickListener(new View.OnClickListener() {
@@ -125,13 +109,20 @@ public class MainActivity extends AppCompatActivity
         mFlashLightRunnable = new Runnable() {
             @Override
             public void run() {
-                if (toggle) {
+                if(toggle){
                     turnFlashlightOn();
-                    toggle = false;
-                } else {
+                    if(should_turn_light_off > 3) {
+                        toggle = false;
+                        should_turn_light_off = 0;
+                    }
+                    should_turn_light_off++;
+                }else{
                     turnFlashlightOff();
+                    mFlashLightHandler.removeCallbacksAndMessages(null);
                 }
-                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                if(getPreferenceValue(getString(R.string.flashlight_prefs_key))) {
+                    mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                }
             }
         };
 
@@ -139,27 +130,34 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run() {
                 beatInMeasure++;
-                if (beatInMeasure == 1) {
-                    playAudio(R.raw.bubble_accent);
-                } else {
-                    playAudio(R.raw.bubble);
-                }
                 mBeatsInMeasure.setText(Integer.toString(beatInMeasure));
                 long milli_delay = Long.parseLong(mBPMinuteEditText.getText().toString());
                 double some_num = 60.000 / milli_delay;
                 double millis = some_num * 1000;
                 delay = (int) Math.round(millis);
                 notification_time = delay / 10;
-                if (notification_time > 100) {
+                if(notification_time > 100){
                     notification_time = 100;
                 }
-                if (beatInMeasure >= Integer.parseInt(mBPMeasureEditText.getText().toString())) {
+                toggle = true;
+
+                if(getPreferenceValue(getString(R.string.flashlight_prefs_key))){
+                    mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                }
+                if(beatInMeasure >= Integer.parseInt(mBPMeasureEditText.getText().toString())){
                     beatInMeasure = 0;
                 }
-//                mVibrator.vibrate(notification_time);
-//                mFlashLightHandler.removeCallbacksAndMessages(null);
-//                toggle = true;
-//                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                if(getPreferenceValue(getString(R.string.vibration_prefs_key))){
+                    mVibrator.vibrate(notification_time);
+                }
+                if(getPreferenceValue(getString(R.string.sound_prefs_key))) {
+                    if (beatInMeasure == 1) {
+                        playAudio(R.raw.bubble_accent);
+                    } else {
+                        playAudio(R.raw.bubble);
+                    }
+                }
+
                 mHandler.postDelayed(this, delay);
             }
         };
@@ -171,10 +169,10 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.toString().equals("")) {
-                    showPlayBtn();
+                if(s.toString().equals("")){
                     mHandler.removeCallbacksAndMessages(null);
                     delay = 0;
+                    showPlayBtn();
                 }
             }
 
@@ -189,75 +187,33 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        setStartBtn();
-    }
+        mBPMeasureEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        Sensor sensor = event.sensor;
-
-        if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            float x = event.values[0];
-            float y = event.values[1];
-            float z = event.values[2];
-
-            long curTime = System.currentTimeMillis();
-
-//            if ((curTime - lastUpdate) > 300) {
-            long diffTime = (curTime - lastUpdate);
-            lastUpdate = curTime;
-
-
-            if (-2 > x) {
-//                Log.d(TAG, "onSensorChanged: x = " + x);
-//                long bpm = updateBPM();
-//                if (bpm > 500) {
-//                    bpm = 0;
-//                }
-//                mBPMinuteEditText.setText(Long.toString(bpm));
             }
 
-//                float speed = Math.abs(x + z - last_x - last_z) / diffTime * 10000;
-//
-//                if (speed > SHAKE_THRESHOLD) {
-//                    Log.d(TAG, "onSensorChanged: " + speed);
-//                }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-            last_x = x;
-            last_y = y;
-            last_z = z;
-        }
-//        }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(s.toString().equals("")){
+                    mBPMeasureEditText.setText("0");
+                }
+            }
+        });
+
+        setStartBtn();
     }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "onActivityResult: requestCode = " + requestCode);
-        Log.d(TAG, "onActivityResult: resultCode = " + resultCode);
-        if (requestCode == RESULT_OK && resultCode == FAVORITES_REQUEST_CODE) {
-            Log.d(TAG, "onActivityResult: here");
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
         releasePlayer();
-        showPlayBtn();
-        mSensorManager.unregisterListener(this);
     }
 
     @Override
@@ -271,12 +227,8 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.settings:
-                Intent settingsIntent = new Intent(this, SettingsActivity.class);
+                Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
                 startActivity(settingsIntent);
-                return true;
-            case R.id.favorites:
-                Intent intent = new Intent(this, FavoritesActivity.class);
-                startActivityForResult(intent, FAVORITES_REQUEST_CODE);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -308,7 +260,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void minusBPMeasureBtnClicked(View view) {
-        if (mBPMeasureEditText.getText().toString().equals("")) {
+        if(mBPMeasureEditText.getText().toString().equals("")){
             mBPMeasureEditText.setText("0");
         }
         long number = Long.parseLong(mBPMeasureEditText.getText().toString());
@@ -320,7 +272,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void plusBPMeasureBtnClicked(View view) {
-        if (mBPMeasureEditText.getText().toString().equals("")) {
+        if(mBPMeasureEditText.getText().toString().equals("")){
             mBPMeasureEditText.setText("1");
             return;
         }
@@ -329,7 +281,6 @@ public class MainActivity extends AppCompatActivity
         mBPMeasureEditText.setText(Long.toString(number2));
     }
     // end of button callbacks
-
 
     private long updateBPM() {
         // get current time in millis
@@ -356,7 +307,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private void turnFlashlightOn() {
+    private void turnFlashlightOn(){
         try {
             CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
 
@@ -366,7 +317,6 @@ public class MainActivity extends AppCompatActivity
                 if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
 
                     cameraManager.setTorchMode(id, true);
-                    shouldTurnFlashlightOff = true;
                 }
             }
 
@@ -376,27 +326,23 @@ public class MainActivity extends AppCompatActivity
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private void turnFlashlightOff() {
-        if (shouldTurnFlashlightOff) {
-            try {
-                CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
+    private void turnFlashlightOff(){
+        try {
+            CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
 
-                for (String id : cameraManager.getCameraIdList()) {
+            for (String id : cameraManager.getCameraIdList()) {
 
-                    // Turn on the flash if camera has one
-                    if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
+                // Turn on the flash if camera has one
+                if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
 
-                        cameraManager.setTorchMode(id, false);
-                    }
+                    cameraManager.setTorchMode(id, false);
                 }
-
-            } catch (Exception e2) {
-                Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
             }
-            shouldTurnFlashlightOff = false;
+
+        } catch (Exception e2) {
+            Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
-
 
     private void playAudio(int soundFile) {
         // Create an instance of the ExoPlayer.
@@ -473,5 +419,10 @@ public class MainActivity extends AppCompatActivity
                 releasePlayer();
             }
         });
+    }
+
+    private boolean getPreferenceValue(String key){
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        return preferences.getBoolean(key, true);
     }
 }

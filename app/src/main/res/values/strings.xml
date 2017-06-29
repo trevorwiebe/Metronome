@@ -14,4 +14,9 @@
     <string name="vibration_prefs_key" translatable="false">vibration_prefs</string>
     <string name="flashlight_prefs_key" translatable="false">flashlight_prefs</string>
     <string name="sound_prefs_key" translatable="false">sound_prefs</string>
+
+    <string name="vibrate_title">Vibrate</string>
+    <string name="flash_light_title">Flashlight</string>
+    <string name="sound_title">Sound</string>
+
 </resources>

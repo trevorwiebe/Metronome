@@ -3,12 +3,14 @@ package com.stickyblob.metronome;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -58,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private long delay = 0;
     private int beatInMeasure = 0;
     private long notification_time;
+    private int should_turn_light_off = 0;
 
 
     private EditText mBPMinuteEditText;
@@ -114,11 +117,18 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 if(toggle){
                     turnFlashlightOn();
-                    toggle = false;
+                    if(should_turn_light_off > 3) {
+                        toggle = false;
+                        should_turn_light_off = 0;
+                    }
+                    should_turn_light_off++;
                 }else{
                     turnFlashlightOff();
+                    mFlashLightHandler.removeCallbacksAndMessages(null);
                 }
-                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                if(getPreferenceValue(getString(R.string.flashlight_prefs_key))) {
+                    mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                }
             }
         };
 
@@ -126,11 +136,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 beatInMeasure++;
-                if(beatInMeasure == 1){
-                    playAudio(R.raw.bubble_accent);
-                }else{
-                    playAudio(R.raw.bubble);
-                }
                 mBeatsInMeasure.setText(Integer.toString(beatInMeasure));
                 long milli_delay = Long.parseLong(mBPMinuteEditText.getText().toString());
                 double some_num = 60.000 / milli_delay;
@@ -141,12 +146,24 @@ public class MainActivity extends AppCompatActivity {
                     notification_time = 100;
                 }
                 toggle = true;
-                mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                if(getPreferenceValue(getString(R.string.flashlight_prefs_key))){
+                    mFlashLightHandler.postDelayed(mFlashLightRunnable, notification_time);
+                }
                 if(beatInMeasure >= Integer.parseInt(mBPMeasureEditText.getText().toString())){
                     beatInMeasure = 0;
                 }
-                mVibrator.vibrate(notification_time);
+                if(getPreferenceValue(getString(R.string.vibration_prefs_key))){
+                    mVibrator.vibrate(notification_time);
+                }
                 mHandler.postDelayed(this, delay);
+
+                if(getPreferenceValue(getString(R.string.sound_prefs_key))) {
+                    if (beatInMeasure == 1) {
+                        playAudio(R.raw.bubble_accent);
+                    } else {
+                        playAudio(R.raw.bubble);
+                    }
+                }
             }
         };
 
@@ -160,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
                 if(s.toString().equals("")){
                     mHandler.removeCallbacksAndMessages(null);
                     delay = 0;
+                    showPlayBtn();
                 }
             }
 
@@ -174,6 +192,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mBPMeasureEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(s.toString().equals("")){
+                    mBPMeasureEditText.setText("0");
+                }
+            }
+        });
         setStartBtn();
     }
     @Override
@@ -197,8 +233,6 @@ public class MainActivity extends AppCompatActivity {
             case R.id.settings:
                 Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
                 startActivity(settingsIntent);
-                return true;
-            case R.id.upgrade:
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -389,6 +423,11 @@ public class MainActivity extends AppCompatActivity {
                 releasePlayer();
             }
         });
+    }
+
+    private boolean getPreferenceValue(String key){
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        return preferences.getBoolean(key, true);
     }
 
 }

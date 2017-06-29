@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "807992530249",
+    "firebase_url": "https://metronome-a4dd9.firebaseio.com",
+    "project_id": "metronome-a4dd9",
+    "storage_bucket": "metronome-a4dd9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:807992530249:android:9470e736f5556521",
+        "android_client_info": {
+          "package_name": "com.stickyblob.metronome"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "807992530249-aqbfj5inc55h4dfft5hb5pfnudps0der.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRaMJD1jcEDbURmTke7PaTOk8yx-pvyVc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
