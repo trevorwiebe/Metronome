@@ -40,6 +40,9 @@ import com.google.android.exoplayer2.upstream.RawResourceDataSource;
 public class MainActivity extends AppCompatActivity{
 
     private static final String TAG = "MainActivity";
+    private static final String SAVE_STATE = "save_state_boolean";
+    private static final String SAVE_STATE_LONG = "save_state_long";
+    private static final String SAVE_STATE_BIM = "save_state_beat_in_measure";
 
     Handler mHandler = new Handler();
     Runnable mRunnable;
@@ -53,12 +56,13 @@ public class MainActivity extends AppCompatActivity{
     private double totalSeconds;
     private double averageSeconds;
     private int divider = 1;
-    boolean shouldSet = false;
+    private boolean shouldSet = false;
     private double bpm;
     private long delay = 0;
     private int beatInMeasure = 0;
     private long notification_time;
     private int should_turn_light_off = 0;
+    private boolean isPlaying = false;
 
 
     private EditText mBPMinuteEditText;
@@ -83,8 +87,6 @@ public class MainActivity extends AppCompatActivity{
         mTapToRhythmBtn = (Button) findViewById(R.id.tap_to_rhythm_btn);
         mPlayBtn = (Button) findViewById(R.id.go_btn);
         mPauseBtn = (Button) findViewById(R.id.stop_btn);
-
-        mBeatsInMeasure.setText("0");
 
         mTapToRhythmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -206,7 +208,23 @@ public class MainActivity extends AppCompatActivity{
             }
         });
 
-        setStartBtn();
+        if(savedInstanceState != null){
+            isPlaying = savedInstanceState.getBoolean(SAVE_STATE);
+            if(isPlaying) {
+                showPauseBtn();
+                setPauseBtn();
+                beatInMeasure = savedInstanceState.getInt(SAVE_STATE_BIM);
+                delay = savedInstanceState.getLong(SAVE_STATE_LONG);
+                mHandler.postDelayed(mRunnable, delay);
+            }else{
+                mBeatsInMeasure.setText("0");
+                showPlayBtn();
+                setStartBtn();
+            }
+        }else {
+            mBeatsInMeasure.setText("0");
+            setStartBtn();
+        }
     }
     @Override
     protected void onDestroy() {
@@ -214,6 +232,15 @@ public class MainActivity extends AppCompatActivity{
         mHandler.removeCallbacksAndMessages(null);
         mFlashLightHandler.removeCallbacksAndMessages(null);
         releasePlayer();
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(SAVE_STATE, isPlaying);
+        outState.putLong(SAVE_STATE_LONG, delay);
+        outState.putInt(SAVE_STATE_BIM, beatInMeasure);
     }
 
     @Override
@@ -395,6 +422,7 @@ public class MainActivity extends AppCompatActivity{
         mPlayBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isPlaying = true;
                 setPauseBtn();
                 showPauseBtn();
                 resetBPM();
@@ -412,6 +440,7 @@ public class MainActivity extends AppCompatActivity{
         mPauseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isPlaying = false;
                 setStartBtn();
                 showPlayBtn();
                 mHandler.removeCallbacksAndMessages(null);
